@@ -1,0 +1,43 @@
+RecipeFormatVersion: '2020-01-25'
+ComponentName: com.example.cv2camera
+ComponentVersion: 1.0.0
+ComponentType: aws.greengrass.generic
+ComponentDescription: "Runs cv2 camera script from GitHub"
+ComponentPublisher: Shubham
+
+ComponentConfiguration:
+  DefaultConfiguration:
+    python: /usr/bin/python3
+    venvDir: "{work:path}/venv"
+    repoDir: "Camera-Greengrass-main"
+
+Manifests:
+  - Platform:
+      os: linux
+    Lifecycle:
+      Install:
+        Script: |
+          set -e
+          echo "Creating virtual environment..."
+          {configuration:python} -m venv "{configuration:venvDir}"
+          . "{configuration:venvDir}/bin/activate"
+
+          REPO="{artifacts:decompressedPath}/{configuration:repoDir}"
+          cd "$REPO"
+
+          pip install --upgrade pip
+          pip install -r src/requirements.txt
+
+      Run:
+        Script: |
+          set -e
+          . "{configuration:venvDir}/bin/activate"
+
+          REPO="{artifacts:decompressedPath}/{configuration:repoDir}"
+          cd "$REPO/src"
+
+          exec python3 app.py
+
+    Artifacts:
+      - URI: "https://github.com/shubhamrawat-mitl/Camera-Greengrass/archive/refs/heads/main.zip"
+        Unarchive: ZIP
